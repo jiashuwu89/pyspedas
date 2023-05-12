@@ -1,6 +1,6 @@
 import logging
 from .mms_read_feeps_sector_masks_csv import mms_read_feeps_sector_masks_csv
-from pytplot import get_data, store_data
+from pytplot import get, store
 import numpy as np
 
 logging.captureWarnings(True)
@@ -41,7 +41,14 @@ def mms_feeps_remove_sun(sensor_eyes, trange, probe='1', datatype='electron', da
     -----------
         List of tplot variables created.
     """
-    sector_times, spin_sectors = get_data('mms'+probe+'_epd_feeps_' + data_rate + '_' + level + '_' + datatype + '_spinsectnum'+suffix)
+    spin_sector_tuple = get('mms'+probe+'_epd_feeps_' + data_rate + '_' + level + '_' + datatype + '_spinsectnum'+suffix)
+
+    if spin_sector_tuple is None:
+        logging.warning(f"Error - couldn't find the spin sector variable!!!! Cannot remove sun contamination!")
+        return
+
+    sector_times, spin_sectors = spin_sector_tuple
+
     mask_sectors = mms_read_feeps_sector_masks_csv(trange=trange)
     out_vars = []
 
@@ -51,7 +58,7 @@ def mms_feeps_remove_sun(sensor_eyes, trange, probe='1', datatype='electron', da
     for sensor in top_sensors:
         var_name = 'mms'+str(probe)+'_epd_feeps_'+data_rate+'_'+level+'_'+datatype+'_top_'+data_units+'_sensorid_'+sensor+'_clean'
 
-        top_data_tuple = get_data(var_name+suffix)
+        top_data_tuple = get(var_name+suffix)
         if top_data_tuple is None:
             logging.error('skipping variable: ' + var_name)
             continue
@@ -66,7 +73,7 @@ def mms_feeps_remove_sun(sensor_eyes, trange, probe='1', datatype='electron', da
                     top_data[this_bad_sector] = np.nan
 
         try:
-            store_data(var_name+'_sun_removed'+suffix, data={'x': times, 'y': top_data, 'v': top_energies})
+            store(var_name+'_sun_removed'+suffix, data={'x': times, 'y': top_data, 'v': top_energies})
             out_vars.append(var_name+'_sun_removed'+suffix)
         except Warning:
             continue
@@ -75,7 +82,7 @@ def mms_feeps_remove_sun(sensor_eyes, trange, probe='1', datatype='electron', da
         for sensor in bot_sensors:
             var_name = 'mms'+str(probe)+'_epd_feeps_'+data_rate+'_'+level+'_'+datatype+'_bottom_'+data_units+'_sensorid_'+sensor+'_clean'
 
-            bot_data_tuple = get_data(var_name+suffix)
+            bot_data_tuple = get(var_name+suffix)
             if bot_data_tuple is None:
                 logging.error('skipping: ' + var_name)
                 continue
@@ -90,7 +97,7 @@ def mms_feeps_remove_sun(sensor_eyes, trange, probe='1', datatype='electron', da
                         bot_data[this_bad_sector] = np.nan
 
             try:
-                store_data(var_name+'_sun_removed'+suffix, data={'x': times, 'y': bot_data, 'v': bot_energies})
+                store(var_name+'_sun_removed'+suffix, data={'x': times, 'y': bot_data, 'v': bot_energies})
                 out_vars.append(var_name+'_sun_removed'+suffix)
             except Warning:
                 continue
