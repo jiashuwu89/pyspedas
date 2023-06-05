@@ -3,7 +3,13 @@ GUI for CDAWeb.
 
 A GUI that can download data files from CDAWeb
 and load them into pytplot variables.
+
 Requires cdasws, PyQt5.
+
+PyQt5 is no longer included in the general pyspedas requirements,
+and if it is not installed an error message will be printed.
+To install PyQt5, please use:
+pip install pyqt5
 
 To open the GUI window:
     from pyspedas.cdagui.cdagui import cdagui
@@ -13,26 +19,29 @@ For cdasws documentation, see:
     https://pypi.org/project/cdasws/
     https://cdaweb.gsfc.nasa.gov/WebServices/REST/py/cdasws/index.html
 
-Notes:
-    To start the gui from the command line:
-        python pyspedas/cdagui/cdagui.py
-    To start the gui inside the python environment:
-        exec(open('cdagui.py').read())
-
+To start the gui from the command line, use:
+    python pyspedas/cdagui/cdagui.py
 """
 import sys
+import logging
 import datetime
-from PyQt5.QtCore import Qt, QDate, QCoreApplication
-from PyQt5.QtWidgets import (QApplication, QWidget, QMainWindow,
-                             QGridLayout, QPushButton, QListWidget,
-                             QGroupBox, QCheckBox, QMessageBox,
-                             QVBoxLayout, QLabel, QLineEdit,
-                             QFileDialog, QCalendarWidget, QDialog)
 from cdaweb import CDAWeb
 from config import CONFIG
 
 
-appx = QApplication(sys.argv)
+try:
+    from PyQt5.QtCore import Qt, QDate, QCoreApplication
+    from PyQt5.QtWidgets import (QApplication, QWidget, QMainWindow,
+                                 QGridLayout, QPushButton, QListWidget,
+                                 QGroupBox, QCheckBox, QMessageBox,
+                                 QVBoxLayout, QLabel, QLineEdit,
+                                 QFileDialog, QCalendarWidget, QDialog)
+    appx = QApplication(sys.argv)
+except ImportError:
+    logging.error("PyQt5 library must be installed to use this module.")
+    logging.error("Please install it using: pip install pyqt5")
+    logging.error("Original python error follows...")
+    # sys.exit()
 
 
 def show_my_message(self, title, msg):
@@ -51,6 +60,7 @@ class cdagui(QMainWindow):
     def __init__(self, parent=None):
         """Inilitalize."""
         super().__init__()
+
         self.main_widget = GUIWidget(self)
         self.setCentralWidget(self.main_widget)
         self.init_UI()
@@ -435,6 +445,7 @@ class GUIWidget(QWidget):
 
 
 if __name__ == '__main__':
+
     app = QCoreApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
